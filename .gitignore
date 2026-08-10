@@ -1,5 +1,7 @@
-# CMake's, and the SDK's copy of itself that it generates into it.
-build/
+# CMake's, and the SDK's copy of itself that it generates into it. The glob rather than `build/`
+# because there is one directory per core — `build-riscv/` is the Hazard3 configuration, and a
+# second personality of the chip is not a second checkout.
+build*/
 
 # The pico-sdk, when somebody clones it in here rather than pointing PICO_SDK_PATH elsewhere. It is
 # 81 MB and belongs to Raspberry Pi.

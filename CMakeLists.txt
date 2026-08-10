@@ -2,9 +2,32 @@ cmake_minimum_required(VERSION 3.13)
 
 set(PICO_BOARD pico2_w CACHE STRING "Board type")
 
+# **The RP2350 has two personalities and this program runs on either.** The chip carries a pair of
+# Cortex-M33s and a pair of Hazard3 RISC-V cores, and which set boots is a build-time choice rather
+# than anything the board does — so this is one project with two configurations, not two projects.
+#
+#     cmake -B build                                     the Cortex-M33s
+#     cmake -B build-riscv -DPICO_PLATFORM=rp2350-riscv \
+#           -DPICO_TOOLCHAIN_PATH=/path/to/riscv-toolchain-15
+#
+# The RISC-V configuration needs a toolchain of its own; the SDK looks for `riscv32-unknown-elf` and
+# three other triples, none of which the Arm toolchain provides.
+set(PICO_PLATFORM rp2350 CACHE STRING "rp2350 for the Cortex-M33s, rp2350-riscv for the Hazard3s")
+
+# **sysl has to be told the same thing, and nothing derives it for us**: `sysl build-c` is a program
+# CMake knows nothing about, so the archive would otherwise be compiled for whichever core this file
+# happened to name. Getting it wrong is not a link error on the sysl side — it is an image that
+# faults at whatever executes first.
+if(PICO_PLATFORM STREQUAL "rp2350-riscv")
+    set(SYSL_TARGET riscv32-freestanding)
+else()
+    set(SYSL_TARGET thumb-freestanding-softfp)
+endif()
+
 # No `PICO_HARD_FLOAT_ABI`: `thumb-freestanding-softfp` is what lets this be a stock pico-sdk, with
 # sysl following the SDK's default rather than the SDK following sysl. See `repl/CMakeLists.txt`,
-# which carries the whole of that story.
+# which carries the whole of that story. The question does not arise on the Hazard3 at all — it is
+# RV32IMAC with no F extension, so there are no floating registers to disagree about.
 
 include(pico_sdk_import.cmake)
 
@@ -56,13 +79,13 @@ set(SYSL_C_DEFINES $<TARGET_PROPERTY:sysl_ogol,COMPILE_DEFINITIONS>)
 
 add_custom_command(
     OUTPUT ${SYSL_ARCHIVE} ${SYSL_ARCHIVE}.h
-    COMMAND sysl build-c ${CMAKE_CURRENT_SOURCE_DIR}/ogol --target thumb-freestanding-softfp
+    COMMAND sysl build-c ${CMAKE_CURRENT_SOURCE_DIR}/ogol --target ${SYSL_TARGET}
             "$<$<BOOL:${SYSL_C_INCLUDES}>:--include-path;$<JOIN:${SYSL_C_INCLUDES},;--include-path;>>"
             "$<$<BOOL:${SYSL_C_DEFINES}>:-D;$<JOIN:${SYSL_C_DEFINES},;-D;>>"
             -o ${SYSL_ARCHIVE}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ogol/main.sysl
             ${CMAKE_CURRENT_SOURCE_DIR}/ogol/package.hocon
-    COMMENT "Compiling Ogol and its console for thumbv8m.main"
+    COMMENT "Compiling Ogol and its console for ${SYSL_TARGET}"
     # **`COMMAND_EXPAND_LISTS`, without which the two generator expressions above are useless.** A
     # quoted argument that expands to a `;`-separated list stays *one* argument unless this is given,
     # so `sysl` is handed a single `--include-path;/a;--include-path;/b` and answers

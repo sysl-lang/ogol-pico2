@@ -45,6 +45,31 @@ cmake --build build
 picotool load -f build/sysl_ogol.uf2
 ```
 
+### Or on the RISC-V cores
+
+**The RP2350 has two personalities and this program runs on either.** The chip carries a pair of
+Cortex-M33s *and* a pair of Hazard3 RISC-V cores, and which set boots is a build-time choice — so
+this is one project with two configurations rather than two projects. The whole difference is
+`PICO_PLATFORM`, which the `CMakeLists.txt` also reads to decide sysl's `--target`.
+
+```
+PICO_SDK_PATH=/path/to/pico-sdk cmake -B build-riscv -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    -DPICO_PLATFORM=rp2350-riscv -DPICO_TOOLCHAIN_PATH=/path/to/riscv-toolchain-15
+cmake --build build-riscv
+picotool load -f build-riscv/sysl_ogol.uf2
+```
+
+**It needs a RISC-V toolchain, and not any RISC-V toolchain.** The SDK looks for `riscv32-pico-elf`,
+`riscv32-unknown-elf`, `riscv32-corev-elf` or `riscv-none-elf`; Arm's provides none of them. Use
+Raspberry Pi's own — `riscv-toolchain-15-mac.zip` and its siblings, in the
+[pico-sdk-tools](https://github.com/raspberrypi/pico-sdk-tools/releases) releases — which carries
+newlib and an `rv32imac_…_zba_zbb_zbkb_zbs/ilp32` multilib for what Hazard3 actually is. Homebrew's
+`riscv64-elf-gcc` is the wrong triple *and* ships no C library, which fails deep inside the SDK's own
+boot stage rather than in anything you wrote.
+
+Nothing in the program changes between the two. `picotool info` is what tells them apart: `family ID
+'rp2350-riscv'` and `image type: RISC-V` against `'rp2350-arm-s'` and `ARM Secure`.
+
 Then `screen /dev/cu.usbmodem2101 115200`.
 
 `-f` reflashes a running board with no button, because firmware built with `pico_enable_stdio_usb`
