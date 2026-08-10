@@ -1,24 +1,29 @@
 // Ogol on a Raspberry Pi Pico 2 W, over the USB serial port.
 //
-// **This is now the desktop console with its first three lines swapped**, and that is a smaller
-// difference than it used to be. Both build a `sysl.term.edit.Editor` and walk it; the board's reads
-// the USB port, the desktop's reads standard input after putting the terminal into cbreak mode. There
-// is no mode to change here, because a USB CDC port has no line discipline to get out of the way of —
-// which is the reason a line editor had to exist at all.
+// **This is the desktop console with its first few lines swapped**, and nothing else. Both build a
+// `sysl.term.edit.Editor` and hand it to `sh.sysl.ogol.session`; the board's reads the USB port, the
+// desktop's reads standard input after putting the terminal into cbreak mode. There is no mode to
+// change here, because a USB CDC port has no line discipline to get out of the way of — which is the
+// reason a line editor had to exist at all.
 //
-// Until sysl 0.0.38 that editor was `pico2.read_line`, two hundred lines living in the board's
-// package because nothing in the standard library would echo a keystroke. Moving it into `sysl.term`
-// is what makes these two consoles the same program: the language is developed on a desktop, where a
-// test suite runs in fifty milliseconds, and shipped here unchanged.
+// Until sysl 0.0.38 that editor was `pico2.read_line`, two hundred lines living in the board's package
+// because nothing in the standard library would echo a keystroke. Moving it into `sysl.term` is what
+// makes these consoles the same program: the language is developed on a desktop, where a test suite
+// runs in fifty milliseconds, and shipped here unchanged.
 //
-// **`console_in` and `console_out` come from the package now.** They were written out here for a
-// while — nine lines wrapping `read_byte` and `write_byte` — because a package is consumed as a
-// coordinate and the branch that added them could not be tagged until 0.0.38 existed for it to
-// compile against. pico2 v0.0.7 is that tag, so the copy is gone and this file names what it uses.
+// **The read-run-print loop is the language's too, as of ogol v0.2.0.** It was written out here for a
+// while — twenty lines walking the editor, tracking a held line and choosing between `ogol> ` and
+// `.... ` — and by the time there were three consoles that was three copies to keep in step. What is
+// left is the only platform-dependent part: which streams the lines come from.
+//
+// **`console_in` and `console_out` come from the package too.** They were nine lines here for a while,
+// for the same kind of reason: a package is consumed as a coordinate, and the branch that added them
+// could not be tagged until sysl 0.0.38 existed for it to compile against. pico2 v0.0.7 is that tag.
 
 import sh.sysl.pico2.*
 import sh.sysl.ogol.*
 import sysl.term.edit.editor
+import sysl.time.DurationUnits
 
 @export("main")
 boot() -> int =
@@ -38,29 +43,13 @@ boot() -> int =
     var ed = editor(&input, &output)
     var interp = ogol()
 
-    // What has been typed and not yet run, because it was not finished.
-    var pending = ""
+    session(interp, &ed)
 
-    prints("ogol> ")
+    // `session` returns when `bye` is typed, and a board has nowhere to return *to*. A hosted console
+    // falls out of `main` and the process ends; here `crt0` would run off the end of the world, so the
+    // request is answered rather than obeyed.
+    print("nothing to leave to — reset the board")
 
-    // The walk does not end: a serial port has no end of input, so `read` blocks rather than
-    // answering empty, and the editor goes on handing back lines for as long as the board is powered.
-    for line in ed
-        var src = if pending == "" then line else pending + "\n" + line
-
-        pending = ""
-
-        run(interp, src) match
-            Ok(v) ->
-                v match
-                    Nothing -> ()
-                    _ -> print(render(v))
-            Err(f) ->
-                f match
-                    More -> pending = src
-                    Bad(message) -> print(message)
-
-        prints(if pending == "" then "ogol> " else ".... ")
-
-    0
+    loop
+        sleep(1.s)
 end boot

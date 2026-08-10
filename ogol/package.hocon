@@ -15,13 +15,16 @@ package {
 // `no module is called 'sh.sysl.pico2.externs'` from inside the cached package. An older sysl still
 // needs the two-`--lib` workaround this comment used to describe.
 //
+// **ogol v0.2.0 is what supplies `session`**, the read-run-print loop. Until it this program walked
+// the editor itself, which was one of three copies of the same twenty lines.
+//
 // **pico2 v0.0.7 is what supplies `console_in` and `console_out`**, the port as a `Reader` and a
 // `Writer`. Before it, this program declared its own -- nine lines around `read_byte` and
 // `write_byte` -- because the branch adding them could not be tagged until sysl 0.0.38 existed for
 // it to compile against.
 dependencies {
   pico2 { git = "github.com/sysl-lang/pico2", version = "0.0.7" }
-  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.1.0" }
+  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.2.0" }
 }
 
 // The heap is the language's, not this program's. An interpreter grows a token list, a tree and a
