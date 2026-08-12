@@ -32,5 +32,5 @@ dependencies {
 // are what a `Buf` exists to not have to guess. The SDK links newlib's allocator whether or not a
 // program touches it, so what this declares is honest rather than expensive.
 requires {
-  alloc = true
+  heap = true
 }
