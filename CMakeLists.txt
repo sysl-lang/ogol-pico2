@@ -77,9 +77,16 @@ set(SYSL_C_INCLUDES
 # inside a header.
 set(SYSL_C_DEFINES $<TARGET_PROPERTY:sysl_ogol,COMPILE_DEFINITIONS>)
 
+# **`--include-path pico_sdk=` is a different thing from the bare paths above, and both are wanted.**
+# pico2 v0.0.8 declares in its `package.hocon` that its C includes SDK, lwIP and mbedTLS headers it
+# does not carry, and a declaration is answered only by a path given under its own name — a bare one
+# deliberately does not, or a requirement would be satisfied by accident here and go unenforced in a
+# project that had not happened to pass the right directory. The named flag is this project saying
+# *where the SDK is*; `SYSL_C_INCLUDES` is CMake saying *how it is laid out*.
 add_custom_command(
     OUTPUT ${SYSL_ARCHIVE} ${SYSL_ARCHIVE}.h
     COMMAND sysl build-c ${CMAKE_CURRENT_SOURCE_DIR}/ogol --target ${SYSL_TARGET}
+            --include-path pico_sdk=${PICO_SDK_PATH}
             "$<$<BOOL:${SYSL_C_INCLUDES}>:--include-path;$<JOIN:${SYSL_C_INCLUDES},;--include-path;>>"
             "$<$<BOOL:${SYSL_C_DEFINES}>:-D;$<JOIN:${SYSL_C_DEFINES},;-D;>>"
             -o ${SYSL_ARCHIVE}
