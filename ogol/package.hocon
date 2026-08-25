@@ -18,13 +18,20 @@ package {
 // **ogol v0.2.0 is what supplies `session`**, the read-run-print loop. Until it this program walked
 // the editor itself, which was one of three copies of the same twenty lines.
 //
+// **ogol v0.3.0 is what makes a refusal on the board point at something.** Its reader sits on
+// `sh.sysl.parsing` now, so every token carries a span and `session` draws the line with a caret under
+// the word — which is worth more here than anywhere, because a held definition may be several lines
+// long by the time something in it is refused and a serial console has no way to scroll back and look.
+// It costs flash: the renderer measures the caret by display width, which links Unicode's width
+// tables. Measured on this board rather than guessed at, and the figure is in the README.
+//
 // **pico2 v0.0.7 is what supplies `console_in` and `console_out`**, the port as a `Reader` and a
 // `Writer`. Before it, this program declared its own -- nine lines around `read_byte` and
 // `write_byte` -- because the branch adding them could not be tagged until sysl 0.0.38 existed for
 // it to compile against.
 dependencies {
   pico2 { git = "github.com/sysl-lang/pico2", version = "0.0.8" }
-  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.2.0" }
+  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.3.1" }
 }
 
 // The heap is the language's, not this program's. An interpreter grows a token list, a tree and a
