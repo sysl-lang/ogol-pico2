@@ -37,7 +37,7 @@ pico_sdk_init()
 
 set(SYSL_ARCHIVE ${CMAKE_CURRENT_BINARY_DIR}/libogol.a)
 
-# **Both the language and the board are ordinary coordinates**, declared in `ogol/package.hocon`, so
+# **Both the language and the board are ordinary coordinates**, declared in `ogol/sysl.hocon`, so
 # this project builds from a fresh clone. It did not until `sysl-lang/ogol` was tagged v0.1.0 on
 # 2026-08-10; before that the language came by `--lib` from a checkout beside this one.
 #
@@ -78,7 +78,7 @@ set(SYSL_C_INCLUDES
 set(SYSL_C_DEFINES $<TARGET_PROPERTY:sysl_ogol,COMPILE_DEFINITIONS>)
 
 # **`--include-path pico_sdk=` is a different thing from the bare paths above, and both are wanted.**
-# pico2 v0.0.8 declares in its `package.hocon` that its C includes SDK, lwIP and mbedTLS headers it
+# pico2 declares in its `sysl.hocon` that its C includes SDK, lwIP and mbedTLS headers it
 # does not carry, and a declaration is answered only by a path given under its own name — a bare one
 # deliberately does not, or a requirement would be satisfied by accident here and go unenforced in a
 # project that had not happened to pass the right directory. The named flag is this project saying
@@ -91,7 +91,7 @@ add_custom_command(
             "$<$<BOOL:${SYSL_C_DEFINES}>:-D;$<JOIN:${SYSL_C_DEFINES},;-D;>>"
             -o ${SYSL_ARCHIVE}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ogol/main.sysl
-            ${CMAKE_CURRENT_SOURCE_DIR}/ogol/package.hocon
+            ${CMAKE_CURRENT_SOURCE_DIR}/ogol/sysl.hocon
     COMMENT "Compiling Ogol and its console for ${SYSL_TARGET}"
     # **`COMMAND_EXPAND_LISTS`, without which the two generator expressions above are useless.** A
     # quoted argument that expands to a `;`-separated list stays *one* argument unless this is given,
