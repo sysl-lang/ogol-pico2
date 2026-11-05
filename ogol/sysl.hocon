@@ -3,7 +3,7 @@
 package {
   name    = "ogol-pico"
   version = "0.1.0"
-  sysl    = "0.6.0"
+  sysl    = "0.9.0"
 }
 
 // **Both dependencies are coordinates, and this project builds from a fresh clone.** That was not
@@ -32,7 +32,7 @@ package {
 // it to compile against.
 dependencies {
   pico2 { git = "github.com/sysl-lang/pico2", version = "0.0.10" }
-  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.3.3" }
+  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.3.4" }
 }
 
 // The heap is the language's, not this program's. An interpreter grows a token list, a tree and a
