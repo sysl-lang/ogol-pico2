@@ -31,8 +31,8 @@ package {
 // `write_byte` -- because the branch adding them could not be tagged until sysl 0.0.38 existed for
 // it to compile against.
 dependencies {
-  pico2 { git = "github.com/sysl-lang/pico2", version = "0.0.10" }
-  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.3.4" }
+  pico2 { git = "github.com/sysl-lang/pico2", version = "0.0.11" }
+  ogol  { git = "github.com/sysl-lang/ogol",  version = "0.3.5" }
 }
 
 // The heap is the language's, not this program's. An interpreter grows a token list, a tree and a
